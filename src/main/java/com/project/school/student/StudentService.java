@@ -4,6 +4,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -14,6 +15,9 @@ public class StudentService {
 
     @Autowired
     StudentRepository studentRepository;
+
+    @Autowired
+    StudentHibRepository studentHibRepository;
 
     private ModelMapper modelMapper = new ModelMapper();
 
@@ -27,7 +31,7 @@ public class StudentService {
 
 
     public ArrayList<StudentDTO> getStudents(){
-        List<StudentDAO> studentsdaolist = studentRepository.findAll();
+        List<StudentDAO> studentsdaolist = studentHibRepository.findAll();
         ArrayList<StudentDTO> studentsdtolist = (ArrayList<StudentDTO>) studentsdaolist.stream()
                                             .map(this::convertDAOtoDTO)
                                             .collect(Collectors.toList());
@@ -35,24 +39,26 @@ public class StudentService {
     }
 
     public StudentDTO getStudentById(String student_id){
-        Optional<StudentDAO> studentDAO = studentRepository.findById(student_id);
+        StudentDAO studentDAO = studentHibRepository.findById(student_id);
         return modelMapper.map(studentDAO, StudentDTO.class);
     }
 
+    @Transactional
     public String createStudent(StudentDTO studentDTO){
         StudentDAO studentDAO = modelMapper.map(studentDTO, StudentDAO.class);
-        studentRepository.save(studentDAO);
+        studentHibRepository.save(studentDAO);
         return "success";
     }
 
-
+    @Transactional
     public void updateStudent(String student_id, StudentDTO studentDTO){
         StudentDAO studentDAO = modelMapper.map(studentDTO, StudentDAO.class);
-        studentRepository.save(studentDAO);
+        studentHibRepository.update(studentDAO);
     }
 
+    @Transactional
     public void deleteStudent(String student_id){
-        studentRepository.deleteById(student_id);
+        studentHibRepository.deleteById(student_id);
     }
 
 
